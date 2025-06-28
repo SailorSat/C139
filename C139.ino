@@ -593,8 +593,21 @@ void util_ridgera2() {
     c139_memw(addr, addr);
   }
 
-  Serial.println("-- reset?");
-  // c139 init - regs @ 0x1bdbc
+  Serial.println("-- disable? @ 000246D8");
+  c139_regw(0x02, 0x00);
+  c139_regw(0x03, 0x01);
+
+  Serial.println("-- and-9 @ 0000D11E");
+  c139_regw(0x01, c139_regr(0x01) & 0x09);
+
+  Serial.println("-- memtest? @ 0001C5D2");
+  c139_regw(0x02, 0x01);
+  c139_regw(0x02, 0x03);
+
+  Serial.println("-- and-9 @ 0000D11E");
+  c139_regw(0x01, c139_regr(0x01) & 0x09);
+
+  Serial.println("-- reset? @ 0001BDBC");
   c139_regw(0x00, 0x00);    // 0
   c139_regw(0x01, 0x0F);    // 2
   c139_regw(0x02, 0x00);    // 4
@@ -604,8 +617,7 @@ void util_ridgera2() {
   c139_regw(0x06, 0x0000);  // C
   c139_regw(0x07, 0x0000);  // E
 
-  Serial.println("-- init");
-  // c139 init - regs @ 0x1bde0
+  Serial.println("-- init @ 0001BDE0");
   c139_regw(0x00, 0x00);    // 0
   c139_regw(0x01, 0x0C);    // 2
   c139_regw(0x02, 0x00);    // 4
@@ -615,9 +627,10 @@ void util_ridgera2() {
   c139_regw(0x06, 0x0000);  // C
   c139_regw(0x07, 0x1000);  // E
 
-  Serial.println("-- and-9");
-  // c139 init - regs @ 0x1bdfc
+  Serial.println("-- enable? @ 0001BDFC");
   c139_regw(0x03, 0x00);
+
+  Serial.println("-- and-9 @ 0000D11E");
   c139_regw(0x01, c139_regr(0x01) & 0x09);
 
   Serial.println("-- should trigger int!");
@@ -629,7 +642,7 @@ void util_ridgera2() {
   }
 
   INTCOUNT = 0;
-  Serial.println("-- int handler #1...");
+  Serial.println("-- int handler @ 0001BE4C");
   if (c139_regr(0x00) != 0x0c) {
     // should be 0x0c
     Serial.println(" something went wrong! not 0x0c ");

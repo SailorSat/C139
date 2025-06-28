@@ -1,0 +1,209 @@
+---
+
+chip does 9-N-1 at 1mbps or 2mbps (depending on reg-3 bit-1)
+
+32 - 0 : 0			START BIT
+tx seems active
+32 - 1 : 0			bit 8
+32 - 2 : 1			bit 7
+32 - 3 : 0			bit 6
+32 - 4 : 1			bit 5
+32 - 5 : 0			bit 4
+32 - 6 : 1			bit 3
+32 - 7 : 0			bit 2
+32 - 8 : 1			bit 1
+32 - 9 : 0			bit 0
+32 - 10 : 1			STOP BIT
+tx data = 0AA
+
+---
+
+REGISTER DEFAULT:	000c  000f  0000  0000  0000  0000  1000  0000
+
+---
+
+mode 0: int on tx complete (instant if reg4 == 0 OR reg5 == 0); (does send/recv data)
+mode 1: int on tx complete (instant if reg4 == 0 OR reg5 == 0); (does send/recv data)
+mode 2: int on tx complete (instant if reg4 == 0 OR reg5 == 0); (does send/recv data)
+mode 3: int on tx complete (instant if reg4 == 0 OR reg5 == 0); (does send/recv data)
+
+mode 4: int on rx complete (instant if reg4 == 0 OR bit-9 set); (does send/recv data)
+mode 5: int on rx complete (instant if reg4 == 0 OR bit-9 set); (does send/recv data)
+mode 6: int on rx complete (instant if reg4 == 0); (does send/recv data)
+mode 7: int on rx complete (instant if reg4 == 0); (does send/recv data)
+
+mode 8: int on tx complete (instant if reg5 == 0); (does send/recv data)
+mode 9: int on tx complete (instant if reg5 == 0); (does send/recv data)
+mode A: int on tx complete (instant if reg5 == 0); (does send/recv data)
+mode B: int on tx complete (instant if reg5 == 0); (does send/recv data)
+
+mode C: int on rx complete (bit-9 set); (does send/recv data!)
+mode D: int on rx complete (bit-9 set); (does send/recv data!)
+mode E: no int? (does send/recv data!)
+mode F: no int? (does send/recv data!)
+
+---
+
+mode bit-0 (1)	?
+mode bit-1 (2)	0 = allow sync-bit, 1 = ignore sync-bit
+mode bit-2 (4)	0 = tx interupt, 1 = rx interupt
+mode bit-3 (8)	0 = instant, 1 = wait?
+
+---
+
+reg0 & F
+reg1 & F
+reg2 & 3
+reg3 & 3
+reg4 & FF
+reg5 & FF
+reg6 & 1FFF		-- cannot go below 1000? ; writing 800 ends up with 1800
+reg7 & 1FFF
+
+---
+
+		7		6		5		4		3		2		1		0
+reg0	-		-		-		-		RXR		TXR		SYN		ERR
+bit-0 : error?	(frame error)
+bit-1 : sync		(sync-bit received)
+bit-2 : txready	(reg5 == 0)
+bit-3 : rxready	(reg4 == 0)
+
+
+		7		6		5		4		3		2		1		0
+reg3													SPEED	txwait
+bit-0 seems to be tx-stop (if 1 no tx)
+bit-1 seems to be "hispeed (1)" (2mbps) or "lospeed (0)" (1mbps) mode
+
+---
+
+		Mode #		Int on RX		Int on TX		Reg4 count		Reg5 count		auto-forward?		tx if
+1000	8			N				Y				DN				DN				N					reg5 > 0 (and reg3 NOT 1)
+1001	9			N				Y				DN				DN				M					reg5 > 0 (and reg3 NOT 1)
+1100	c			Y				N				DN				DN				N					reg3 > 0 (and reg3 NOT 1)
+1101	d			Y				N				DN				DN				N					reg5 > 0 (and reg3 NOT 1)
+
+---
+
+-ridgera2 process-
+
+irq6 @ 1be4c
+
+// disable chip?
+Stopped at watchpoint 1 writing 0000 to 20020004 (PC=000246D8)
+Stopped at watchpoint 1 writing 0001 to 20020006 (PC=000246E0)
+
+Stopped at watchpoint 1 reading 0000 from 20020002 (PC=0000D11E)
+Stopped at watchpoint 1 writing 0000 to 20020002 (PC=0000D11E)
+
+// memory tests...
+Stopped at watchpoint 1 writing 0001 to 20020004 (PC=0001C5D2)
+Stopped at watchpoint 1 writing 0003 to 20020004 (PC=0001C5FC)
+Stopped at watchpoint 1 reading 0000 from 20020002 (PC=0001C16E)
+Stopped at watchpoint 1 writing 0000 to 20020002 (PC=0001C16E)
+Stopped at watchpoint 1 reading 0000 from 20020002 (PC=0000D11E)
+Stopped at watchpoint 1 writing 0000 to 20020002 (PC=0000D11E)
+...
+
+reset @ 0001BDBC (chip disabled?)
+Stopped at watchpoint 1 writing 0000 to 20020000 (PC=0001BDBC)
+Stopped at watchpoint 1 writing 000F to 20020002 (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0000 to 20020004 (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0011 to 20020006 (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0004 to 20020008 (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0004 to 2002000A (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0000 to 2002000C (PC=0001BDBC)
+Stopped at watchpoint 1 writing 0000 to 2002000E (PC=0001BDBC)
+
+
+init @ 0001BDE0 (chip disabled?)
+Stopped at watchpoint 1 writing 0000 to 20020000 (PC=0001BDE0)
+Stopped at watchpoint 1 writing 000C to 20020002 (PC=0001BDE0)
+Stopped at watchpoint 1 writing 0000 to 20020004 (PC=0001BDE0)
+Stopped at watchpoint 1 writing 0011 to 20020006 (PC=0001BDE0)
+Stopped at watchpoint 1 writing 0000 to 20020008 (PC=0001BDE0)
+Stopped at watchpoint 1 writing 0000 to 2002000A (PC=0001BDE0)
+Stopped at watchpoint 1 writing 0000 to 2002000C (PC=0001BDE0)
+Stopped at watchpoint 1 writing 1000 to 2002000E (PC=0001BDE0)
+
+// enable chip?
+Stopped at watchpoint 1 writing 0000 to 20020006 (PC=0001BDFC)
+
+Stopped at watchpoint 1 reading 000C from 20020002 (PC=0000D11E)
+Stopped at watchpoint 1 writing 0008 to 20020002 (PC=0000D11E)
+
+
+Stopped at watchpoint 1 reading 0006 from 20020000 (PC=0001BE50)
+>d3 = c
+Stopped at watchpoint 1 reading 0000 from 2002000C (PC=0001BE56)
+Stopped at watchpoint 1 reading 00 from 2002000B (PC=0001BE80)
+Stopped at watchpoint 1 writing 0000 to 2002000E (PC=0001BF40)
+Stopped at watchpoint 1 writing 0001 to 20020006 (PC=0001BF4E)
+Stopped at watchpoint 1 writing 0024 to 2002000A (PC=0001BF5A)
+Stopped at watchpoint 1 reading 000F from 20020002 (PC=0001BF60)
+Stopped at watchpoint 1 writing 0008 to 20020002 (PC=0001BF60)
+
+mode and-9 @ @ 0000D11E
+
+; causes interrupt - status 0c, mode = F ; PC=0001BE4C
+	read status					@ 0001BE50
+	read rxoffs					@ 0001BE56
+	IF status 04 or 0c (try mode-9)
+		read rxoffs					@ 0001BE80
+		sets txoffs 00				@ 0001BF40
+		sets reg-3 01				@ 0001BF4E
+		sets txsize 24				@ 0001BF5A
+		mode and-8					@ 0001BF60
+		sets mode 8					@ 0001BF60
+		sets ctrl 00				@ 0001BF68
+	IF status & 0x02
+		clear status				@ 0001BEB4
+		sets ctrl 00				@ 0001BEBA
+		mode and-9					@ 0001BEC6
+		sets mode 9					@ 0001BEC6
+; causes transmission, fire int on transfer completion, mode = F
+
+; causes interupt - status 04, mode = F ; PC=0001BE4C
+	read status					@ 0001BE50
+	read rxoffs					@ 0001BE56
+	IF status 04 or 0c (try mode-9)
+		read rxoffs					@ 0001BE80
+		sets txoffs 00				@ 0001BF40
+		sets reg-3 01				@ 0001BF4E
+		sets txsize 24				@ 0001BF5A
+		mode and-8					@ 0001BF60
+		sets mode 8					@ 0001BF60
+		sets ctrl 00				@ 0001BF68
+	IF status & 0x02
+		clear status				@ 0001BEB4
+		sets ctrl 00				@ 0001BEBA
+		mode and-9					@ 0001BEC6
+		sets mode 9					@ 0001BEC6
+
+
+--suzuka8h--
+int1 - vint @ 39BC
+int2 - comm @ 5B26
+
+reset (?) @ 5736
+reset (!) @ 57AE
+init  (!) @ 57CE (triggers interupt, but interupts disabled)
+mode-8    @ 57EE (triggers interupts, mode-F, status-C)
+
+int-handler @ 5B2A
+	if bit-1 (0x02) goto 5B90 (read data from memory)
+	if NOT bit-2 goto 5B84 (line error)
+	set txoffset 900 (real chip will have 800 in register?? - data is written to 900 though)
+	set txsize-25
+	set reg3-0
+	set mode-D (sends out data and fires INT if reading something)
+
+mode-AND_B @ 5AFA (triggers interupt)
+
+int-handler @ 5B2A
+	if bit-1 (0x02) goto 5B90 (read data from memory)
+	if NOT bit-2 goto 5B84 (line error)
+	set reg0-0 (clear int?)
+	set mode-D (no data to send)
+
+mode-AND_B @ 5AFA (triggers interupt)

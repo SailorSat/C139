@@ -1,0 +1,4 @@
+1 - white	McL/Wil Wil/Lotus	Williams
+2 - red		Lot/Mar Wil/Lotus	Lotus
+3 - red/white	McL/Wil McL/March	McLaren
+4 - blue	Lot/Mar McL/March	March

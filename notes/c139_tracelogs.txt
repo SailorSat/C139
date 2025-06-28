@@ -1,0 +1,279 @@
+---
+
+## cycle 0* ( idle )
+CYCLE: 0003 0003 ADDR:0000 DATA:1FFF CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0004 0003 ADDR:0000 DATA:1FFF CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 0005 0003 ADDR:0000 DATA:1FFF CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## cycle 1 (write #1)
+CYCLE: 0005 0004 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0005 0004 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0005 0004 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0005 0004 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0005 0004 ADDR:0001 DATA:0009 CTRL:[ --- --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0006 0004 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0006 0004 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0006 0004 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 2 (write #2)
+CYCLE: 0006 0005 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0006 0005 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0006 0005 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0007 0005 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0007 0005 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+writing REGISTER @ 0001 : 0009
+CYCLE: 0007 0005 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0007 0005 ADDR:0001 DATA:0009 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0007 0005 ADDR:0001 DATA:0009 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 3 (write #3* registers need a 3rd write cycle)
+CYCLE: 0007 0006 ADDR:0001 DATA:0009 CTRL:[ --- 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0008 0006 ADDR:0001 DATA:0009 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 0009 0006 ADDR:0001 DATA:0009 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 4 (after write -- IRQ is happening)
+INTERRUPT!
+CYCLE: 0009 0007 ADDR:0001 DATA:1FFF CTRL:[ 16M 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 0009 0007 ADDR:0001 DATA:1FFF CTRL:[ 16M 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 0009 0007 ADDR:0001 DATA:1FFF CTRL:[ --- 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 0009 0007 ADDR:0001 DATA:1FFF CTRL:[ --- 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 0009 0007 ADDR:0001 DATA:1FFF CTRL:[ --- --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 000A 0007 ADDR:0001 DATA:1FFF CTRL:[ 16M --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 000A 0007 ADDR:0001 DATA:1FFF CTRL:[ 16M --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 000A 0007 ADDR:0001 DATA:1FFF CTRL:[ 16M --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+
+## cycle 5* (idle)
+CYCLE: 000A 0008 ADDR:0001 DATA:1FFF CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000A 0008 ADDR:0001 DATA:1FFF CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000A 0008 ADDR:0001 DATA:1FFF CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000B 0008 ADDR:0001 DATA:1FFF CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000B 0008 ADDR:0001 DATA:1FFF CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000B 0008 ADDR:0001 DATA:1FFF CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000B 0008 ADDR:0001 DATA:1FFF CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 000B 0008 ADDR:0001 DATA:1FFF CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+---
+
+## memory @ 0000 | 01aa  0055  00a5  005a  0000  0000  0000  0000
+## regs   @ 0000 | 000c  000d  0000  0000  0000  0000  1000  0000
+
+## cycle 0* (idle)
+CYCLE: 9E67 76CE ADDR:007F DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E68 76CE ADDR:007F DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E69 76CE ADDR:007F DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## cycle 1 (write #1)
+CYCLE: 9E69 76CF ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E69 76CF ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E69 76CF ADDR:0005 DATA:0004 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E69 76CF ADDR:0005 DATA:0004 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E69 76CF ADDR:0005 DATA:0004 CTRL:[ --- --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6A 76CF ADDR:0005 DATA:0004 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6A 76CF ADDR:0005 DATA:0004 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6A 76CF ADDR:0005 DATA:0004 CTRL:[ 16M --- DT --- --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 2 (write #2)
+CYCLE: 9E6A 76D0 ADDR:0005 DATA:0004 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6A 76D0 ADDR:0005 DATA:0004 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6A 76D0 ADDR:0005 DATA:0004 CTRL:[ --- 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6B 76D0 ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT --- --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6B 76D0 ADDR:0005 DATA:0004 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+writing REGISTER @ 0005 : 0004
+CYCLE: 9E6B 76D0 ADDR:0005 DATA:0004 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6B 76D0 ADDR:0005 DATA:0004 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6B 76D0 ADDR:0005 DATA:0004 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 3 (write #3)
+CYCLE: 9E6B 76D1 ADDR:0005 DATA:0004 CTRL:[ --- 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ 16M 12M DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6C 76D1 ADDR:0005 DATA:0004 CTRL:[ --- --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+CYCLE: 9E6D 76D1 ADDR:0005 DATA:0004 CTRL:[ 16M --- DT ACK --- --- WT CS ] AUX:[ RX TX ]
+
+## cycle 4* (idle)
+CYCLE: 9E6D 76D2 ADDR:0005 DATA:0004 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6D 76D2 ADDR:0005 DATA:0004 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6D 76D2 ADDR:0005 DATA:0004 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6D 76D2 ADDR:0005 DATA:0004 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6D 76D2 ADDR:0005 DATA:0004 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6E 76D2 ADDR:0005 DATA:0004 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6E 76D2 ADDR:0005 DATA:0004 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E6E 76D2 ADDR:0005 DATA:0004 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+...
+
+## cycle 8* (tx delay = 4 ; 76D6 - 76D2)
+CYCLE: 9E72 76D6 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E72 76D6 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E72 76D6 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E73 76D6 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E73 76D6 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E73 76D6 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E73 76D6 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E73 76D6 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+
+...
+
+## 16 16bit cycles later
+CYCLE: 9E82 76E2 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+32 - 0 : 0
+tx seems active
+CYCLE: 9E82 76E2 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E82 76E2 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9E83 76E2 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E83 76E2 ADDR:0005 DATA:0001 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E83 76E2 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E83 76E2 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E83 76E2 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## 16 16bit cycles later
+CYCLE: 9E92 76EE ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 1 : 1
+CYCLE: 9E92 76EE ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E92 76EE ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E93 76EE ADDR:0005 DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E93 76EE ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E93 76EE ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E93 76EE ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9E93 76EE ADDR:0005 DATA:0001 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## 16 16bit cycles later
+CYCLE: 9EA1 76F9 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA1 76F9 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA1 76F9 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA1 76F9 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA1 76F9 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA2 76F9 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 2 : 1
+CYCLE: 9EA2 76F9 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EA2 76F9 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## 16 16bit cycles later
+CYCLE: 9EB2 7706 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+32 - 3 : 0
+CYCLE: 9EB2 7706 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EB2 7706 ADDR:0005 DATA:0001 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EB3 7706 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EB3 7706 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EB3 7706 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EB3 7706 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EB3 7706 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+## 16 16bit cycles later
+CYCLE: 9EC2 7712 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 4 : 1
+CYCLE: 9EC2 7712 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EC2 7712 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EC3 7712 ADDR:0005 DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EC3 7712 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EC3 7712 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EC3 7712 ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EC3 7712 ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+
+CYCLE: 9ED2 771E ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+32 - 5 : 0
+CYCLE: 9ED2 771E ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9ED2 771E ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9ED3 771E ADDR:0005 DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9ED3 771E ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9ED3 771E ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9ED3 771E ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9ED3 771E ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+CYCLE: 9EE2 772A ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 6 : 1
+CYCLE: 9EE2 772A ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EE2 772A ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EE3 772A ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EE3 772A ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EE3 772A ADDR:0005 DATA:0001 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EE3 772A ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EE3 772A ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+
+CYCLE: 9EF2 7736 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+32 - 7 : 0
+CYCLE: 9EF2 7736 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EF2 7736 ADDR:0005 DATA:0001 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9EF3 7736 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EF3 7736 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EF3 7736 ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EF3 7736 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9EF3 7736 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+CYCLE: 9F02 7742 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 8 : 1
+CYCLE: 9F02 7742 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F02 7742 ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F03 7742 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F03 7742 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F03 7742 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F03 7742 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F03 7742 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+
+CYCLE: 9F12 774E ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+32 - 9 : 0
+CYCLE: 9F12 774E ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F12 774E ADDR:0005 DATA:0003 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F13 774E ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F13 774E ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F13 774E ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F13 774E ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F13 774E ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX TX ]
+
+INTERRUPT!
+CYCLE: 9F1F 7758 ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0000 CTRL:[ 16M 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0003 CTRL:[ 16M 12M -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0003 CTRL:[ --- --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F20 7758 ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+INTERRUPT!
+CYCLE: 9F21 7758 ADDR:0005 DATA:0000 CTRL:[ 16M --- -- --- INT --- RD -- ] AUX:[ RX TX ]
+
+CYCLE: 9F22 775A ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+32 - 10 : 1
+tx data = 1aa
+CYCLE: 9F22 775A ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F22 775A ADDR:0005 DATA:0000 CTRL:[ --- 12M -- --- --- --- RD -- ] AUX:[ RX TX ]
+CYCLE: 9F23 775A ADDR:0005 DATA:0003 CTRL:[ 16M 12M -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F23 775A ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F23 775A ADDR:0005 DATA:0003 CTRL:[ 16M --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F23 775A ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+CYCLE: 9F23 775A ADDR:0005 DATA:0000 CTRL:[ --- --- -- --- --- --- RD -- ] AUX:[ RX -- ]
+
+...
+
+memory @ 1000 | 01aa  0055  00a5  005a  0000  0000  0000  0000
+regs   @ 0000 | 0006  000f  0000  0000  00fc  0000  1004  0004
