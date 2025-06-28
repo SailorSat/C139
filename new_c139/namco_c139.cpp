@@ -566,7 +566,9 @@ void namco_c139_device::device_start()
 	save_item(NAME(m_reg));
 
 	save_item(NAME(m_irq_state));
+	save_item(NAME(m_irq_count));
 
+	save_item(NAME(m_txblock));
 	save_item(NAME(m_txdelay));
 	save_item(NAME(m_rxdelay));
 }
@@ -593,6 +595,13 @@ void namco_c139_device::device_reset()
 	m_reg[REG_5_TXSIZE] = 0x0000;
 	m_reg[REG_6_RXOFFSET] = 0x1000;
 	m_reg[REG_7_TXOFFSET] = 0x0000;
+
+	m_irq_state = CLEAR_LINE;
+	m_irq_count = 0x0000;
+
+	m_txblock = 0x0000;
+	m_txdelay = 0x0000;
+	m_rxdelay = 0x0000;
 }
 
 void namco_c139_device::device_stop()
@@ -747,7 +756,10 @@ TIMER_CALLBACK_MEMBER(namco_c139_device::timer_12mhz_callback)
 
 void namco_c139_device::comm_tick()
 {
-	int m_new_state = CLEAR_LINE;
+	// hold int for a moment
+	if (--m_irq_count > 0)
+		m_irq_state = CLEAR_LINE;
+	int m_new_state = m_irq_state;
 
 	switch (m_reg[REG_1_MODE])
 	{
@@ -826,6 +838,7 @@ void namco_c139_device::comm_tick()
 
 	if (m_irq_state != m_new_state)
 	{
+		m_irq_count = 4;
 		m_irq_state = m_new_state;
 		m_irq_cb(m_irq_state);
 	}
@@ -835,8 +848,7 @@ void namco_c139_device::comm_tick()
 
 	// prevent completing send too fast
 	if (m_txdelay > 0)
-		if (--m_txdelay == 0)
-			m_reg[REG_5_TXSIZE] = 0x00;
+		m_reg[REG_5_TXSIZE] = --m_txdelay;
 
 	// prevent receiving too fast
 	if (m_rxdelay > 0)
@@ -920,10 +932,15 @@ void namco_c139_device::send_data(unsigned data_size)
 	unsigned buf_offset = 1;
 	for (unsigned j = 0x00; j < tx_size; j++)
 	{
-		put_u16be(&m_buffer[buf_offset], m_ram[tx_offset & tx_mask]);
+		uint16_t data = m_ram[tx_offset & tx_mask];
+		data &= 0x00ff;
+		put_u16be(&m_buffer[buf_offset], data);
 		tx_offset++;
 		buf_offset += 2;
 	}
+
+	// set bit-8 on last byte
+	m_buffer[buf_offset -2] |= 0x01;
 
 	//m_reg[REG_5_TXSIZE] = 0x00;
 	m_txdelay = tx_size * 12;

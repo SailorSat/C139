@@ -71,6 +71,7 @@ private:
 
 	uint16_t m_linktimer;
 	int m_irq_state;
+	uint16_t m_irq_count;
 
 	uint16_t m_txblock;
 	uint16_t m_txdelay;
