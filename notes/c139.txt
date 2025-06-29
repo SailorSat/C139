@@ -44,7 +44,7 @@ mode F: no int? (does send/recv data!)
 
 ---
 
-mode bit-0 (1)	?
+mode bit-0 (1)	0 = ignore sync bit tx wise?
 mode bit-1 (2)	0 = allow sync-bit, 1 = ignore sync-bit
 mode bit-2 (4)	0 = tx interupt, 1 = rx interupt
 mode bit-3 (8)	0 = instant, 1 = wait?

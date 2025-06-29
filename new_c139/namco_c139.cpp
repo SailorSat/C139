@@ -8,54 +8,10 @@
     connected to M5M5179P RAM with a 13-bit address bus, and 9 bit data bus
     connected to host cpu with a 14*-bit address bus, and 13 bit data bus
     2 clock inputs - 16M and 12M
-    currently there are 4 known modes of operation:
-
     uses 9-N-1 encoding, with 1 or 2 mbits
 
-    mode 0x08:
-    - ridgera2
-    - raverace
-
-    mode 0x09:
-    - fourtrax
-    - suzuka8h
-    - suzuk8h2
-    - winrungp
-    - winrun91
-    - driveyes (center)
-    - cybsled
-    - cybrcomm
-    - acedrive
-    - victlap
-    - cybrcycc
-    - adillor
-
-    mode 0x0c:
-    - ridgeracf
-
-    mode 0x0d:
-    - finallap
-    - finallap2
-    - finallap3
-    - driveyes (sides)
-    - tokyowar
-    - aircomb
-    - dirtdash
-    - alpiner2b (uses 0xfd)
-
-    mode 0x0f (configuration mode)
-    - 0x02 used to setup byte/word adressing
-
     NOTES:
-      apparently mode 0x09 and 0x0d modify the received data.
-      mode 0x09 does not update *anything* after data got changed. might be automatic.
-      mode 0x0d updates the tx offset pointing to the rx buffer (which is not supported right now)
-
-    TODO:
-    - hook a real chip and test in detail
-    - mode 0x0d shows 1 machine in service mode and attract mode, however most games seem to work "okay" in multiplayer.
-    - C422 seems to be a pin compatible upgrade to C139, probably supporting higher clock speeds? hook up c139 in system23
-    - mode 0x0b is used by s23 games to test interrupts.
+    - C422 seems to be a pin compatible upgrade to C139, probably supporting higher clock speeds?
 
 ***************************************************************************/
 
@@ -69,7 +25,7 @@
 
 #include <iostream>
 
-#define VERBOSE 1
+#define VERBOSE 0
 #include "logmacro.h"
 
 
@@ -676,13 +632,6 @@ void namco_c139_device::reg_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 	if (!machine().side_effects_disabled())
 		LOG("C139: reg_w[%02x] = %04x\n", offset, data);
 
-	// hack to trigger INT from debugger
-	if ((offset == REG_1_MODE) && (data & 0x8000))
-	{
-		// fire interrupt
-		m_irq_cb(ASSERT_LINE);
-	}
-
 	// registers are mirrored and limited in size
 	offset &= 0x07;
 	switch (offset)
@@ -717,6 +666,9 @@ void namco_c139_device::reg_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 		case REG_0_STATUS:
 			// status reset / irq ack?
 			m_reg[REG_0_STATUS] = 0x00;
+			m_irq_count = 0;
+			m_irq_state = CLEAR_LINE;
+			m_irq_cb(m_irq_state);
 			break;
 
 		case REG_5_TXSIZE:
@@ -779,9 +731,10 @@ TIMER_CALLBACK_MEMBER(namco_c139_device::timer_12mhz_callback)
 void namco_c139_device::comm_tick()
 {
 	// hold int for a moment
-	if (--m_irq_count > 0)
-		m_irq_state = CLEAR_LINE;
 	int m_new_state = m_irq_state;
+	if (m_irq_count > 0)
+		if (--m_irq_count == 0)
+			m_new_state = CLEAR_LINE;
 
 	switch (m_reg[REG_1_MODE])
 	{
@@ -794,7 +747,6 @@ void namco_c139_device::comm_tick()
 				// fire int if RXSIZE or TXSIZE is 0
 				m_new_state = ASSERT_LINE;
 				m_reg[REG_1_MODE] = 0x0f;
-				osd_printf_verbose("INT #1\n");
 			}
 			break;
 
@@ -806,7 +758,6 @@ void namco_c139_device::comm_tick()
 				// fire int if RXSIZE = 0 OR sync-bit detected.
 				m_new_state = ASSERT_LINE;
 				m_reg[REG_1_MODE] = 0x0f;
-				osd_printf_verbose("INT #2\n");
 			}
 			break;
 
@@ -818,7 +769,6 @@ void namco_c139_device::comm_tick()
 				// fire int if RXSIZE = 0.
 				m_new_state = ASSERT_LINE;
 				m_reg[REG_1_MODE] = 0x0f;
-				osd_printf_verbose("INT #3\n");
 			}
 			break;
 
@@ -832,7 +782,6 @@ void namco_c139_device::comm_tick()
 				// fire int if TXSIZE = 0.
 				m_new_state = ASSERT_LINE;
 				m_reg[REG_1_MODE] = 0x0f;
-				osd_printf_verbose("INT #4\n");
 			}
 			break;
 
@@ -844,7 +793,6 @@ void namco_c139_device::comm_tick()
 				// fire int if sync-bit detected.
 				m_new_state = ASSERT_LINE;
 				m_reg[REG_1_MODE] = 0x0f;
-				osd_printf_verbose("INT #5\n");
 			}
 			break;
 
@@ -870,7 +818,8 @@ void namco_c139_device::comm_tick()
 
 	// prevent completing send too fast
 	if (m_txdelay > 0)
-		m_reg[REG_5_TXSIZE] = (--m_txdelay) / 12;
+		if (--m_txdelay == 0)
+			m_reg[REG_5_TXSIZE] = 0;
 
 	// prevent receiving too fast
 	if (m_rxdelay > 0)
