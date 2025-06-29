@@ -69,7 +69,8 @@ private:
 
 	uint8_t m_buffer[0x200];
 
-	uint16_t m_linktimer;
+	uint8_t m_linkid;
+
 	int m_irq_state;
 	uint16_t m_irq_count;
 

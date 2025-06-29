@@ -544,6 +544,16 @@ namco_c139_device::namco_c139_device(const machine_config &mconfig, const char *
 	m_remotehost = opts.comm_remotehost();
 	m_remoteport = opts.comm_remoteport();
 
+	// come up with some magic number for identification
+	std::string remotehost = util::string_format("%s:%s", m_remotehost, m_remoteport);
+	m_linkid = 0;
+	for (int x = 0; x < sizeof(remotehost) && remotehost[x] != 0; x++)
+	{
+		m_linkid ^= remotehost[x];
+	}
+
+	LOG("C139: ID byte = %02d\n", m_linkid);
+
 	std::fill(std::begin(m_buffer), std::end(m_buffer), 0);
 }
 
@@ -564,6 +574,8 @@ void namco_c139_device::device_start()
 	// state saving
 	save_item(NAME(m_ram));
 	save_item(NAME(m_reg));
+
+	save_item(NAME(m_linkid));
 
 	save_item(NAME(m_irq_state));
 	save_item(NAME(m_irq_count));
@@ -746,6 +758,16 @@ void namco_c139_device::sci_de_hack(uint8_t data)
 			m_remoteport = "15112";
 			break;
 	}
+
+	// come up with some magic number for identification
+	std::string remotehost = util::string_format("%s:%s", m_remotehost, m_remoteport);
+	m_linkid = 0;
+	for (int x = 0; x < sizeof(remotehost) && remotehost[x] != 0; x++)
+	{
+		m_linkid ^= remotehost[x];
+	}
+
+	LOG("C139: ID byte = %02d\n", m_linkid);
 }
 
 // 12mhz clock input
@@ -848,13 +870,13 @@ void namco_c139_device::comm_tick()
 
 	// prevent completing send too fast
 	if (m_txdelay > 0)
-		m_reg[REG_5_TXSIZE] = --m_txdelay;
+		m_reg[REG_5_TXSIZE] = (--m_txdelay) / 12;
 
 	// prevent receiving too fast
 	if (m_rxdelay > 0)
 		m_rxdelay--;
 
-	unsigned data_size = 0x100;
+	unsigned data_size = 0x200;
 	if (m_txblock == 0 && m_txdelay == 0)
 		send_data(data_size);
 
@@ -869,10 +891,10 @@ void namco_c139_device::read_data(unsigned data_size)
 	if (recv > 0)
 	{
 		// save message to "rx buffer"
-		unsigned rx_size = m_buffer[0];
+		unsigned rx_size = m_buffer[0x1ff];
 		unsigned rx_offset = m_reg[REG_6_RXOFFSET]; // rx offset in words
 		LOG("C139: rx_offset = %04x, rx_size == %02x\n", rx_offset, rx_size);
-		unsigned buf_offset = 1;
+		unsigned buf_offset = 0;
 		for (unsigned j = 0x00; j < rx_size; j++)
 		{
 			uint16_t data = get_u16be(&m_buffer[buf_offset]);
@@ -911,10 +933,6 @@ unsigned namco_c139_device::read_frame(unsigned data_size)
 
 void namco_c139_device::send_data(unsigned data_size)
 {
-	// hack; real hardware actually does send in mode F
-	if (m_reg[REG_1_MODE] == 0x0f)
-		return;
-
 	// check if tx is halted
 	if (m_reg[REG_3_START] & 0x01)
 		return;
@@ -925,22 +943,31 @@ void namco_c139_device::send_data(unsigned data_size)
 	unsigned tx_offset = m_reg[REG_7_TXOFFSET]; // tx offset in words
 	unsigned tx_mask = 0x1fff;
 	unsigned tx_size = m_reg[REG_5_TXSIZE];
-	LOG("C139: tx_offset = %04x, tx_size == %02x\n", tx_offset, tx_size);
+	LOG("C139: tx_mode = %02x, tx_offset = %04x, tx_size == %02x\n", m_reg[REG_1_MODE], tx_offset, tx_size);
 
-	m_buffer[0] = tx_size;
+	m_buffer[0x1fe] = m_linkid;
+	m_buffer[0x1ff] = tx_size;
 
-	unsigned buf_offset = 1;
+	// mode 8 (ridgera2) has sync bit set in data (faulty)
+	// mode 8 (raverace) has sync bit set in data (faulty)
+	// mode c (ridgeracf) has no sync bit set in data (faulty)
+	// mode 9 (acedrive) has sync bit set in data (correctly)
+	bool use_sync_bit = m_reg[REG_1_MODE] & 0x01;
+
+	unsigned buf_offset = 0;
 	for (unsigned j = 0x00; j < tx_size; j++)
 	{
 		uint16_t data = m_ram[tx_offset & tx_mask];
-		data &= 0x00ff;
+		if (!use_sync_bit)
+			data &= 0x00ff;
 		put_u16be(&m_buffer[buf_offset], data);
 		tx_offset++;
 		buf_offset += 2;
 	}
 
-	// set bit-8 on last byte
-	m_buffer[buf_offset -2] |= 0x01;
+	// set bit-8 on last byte (mode 8/c)
+	if (!use_sync_bit)
+		m_buffer[buf_offset -2] |= 0x01;
 
 	//m_reg[REG_5_TXSIZE] = 0x00;
 	m_txdelay = tx_size * 12;
