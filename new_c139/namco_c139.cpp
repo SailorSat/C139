@@ -32,11 +32,13 @@
 class namco_c139_device::context
 {
 public:
-	context() :
+	context(namco_c139_device &device) :
+		m_device(device),
 		m_acceptor(m_ioctx),
 		m_sock_rx(m_ioctx),
 		m_sock_tx(m_ioctx),
 		m_timeout_tx(m_ioctx),
+		m_stopping(false),
 		m_state_rx(0U),
 		m_state_tx(0U)
 	{
@@ -107,6 +109,7 @@ public:
 		m_ioctx.post(
 			[this]()
 			{
+				m_stopping = true;
 				std::error_code err;
 				if (m_acceptor.is_open())
 					m_acceptor.close(err);
@@ -173,113 +176,130 @@ private:
 	public:
 		fifo() :
 			m_wp(0),
-			m_rp(0),
-			m_used(0)
+			m_rp(0)
 		{
 		}
 
 		unsigned write(uint8_t* buffer, unsigned data_size)
 		{
+			unsigned current_rp = m_rp.load(std::memory_order_acquire);
 			unsigned current_wp = m_wp.load(std::memory_order_relaxed);
-			unsigned current_used = m_used.load(std::memory_order_acquire);
+
+			// calculate free space
+			unsigned data_free = (BUFFER_SIZE + current_rp - current_wp - 1) % BUFFER_SIZE;
 
 			// sanity checks
-			if (data_size > BUFFER_SIZE - current_used)
+			if (data_size > data_free)
 				return UINT_MAX;
 			if (data_size == 0)
 				return 0;
 
-			unsigned used = 0;
+			unsigned data_used = 0;
 
 			// first part (up to end)
 			unsigned block = std::min(data_size, BUFFER_SIZE - current_wp);
 			std::copy_n(&buffer[0], block, &m_buffer[current_wp]);
-			used += block;
+			data_used += block;
 			current_wp = (current_wp + block) % BUFFER_SIZE;
 
 			// second part (from beginning, if wrapped)
-			if (used < data_size)
+			if (data_used < data_size)
 			{
-				block = data_size - used;
-				std::copy_n(&buffer[used], block, &m_buffer[current_wp]);
-				used += block;
+				block = data_size - data_used;
+				std::copy_n(&buffer[data_used], block, &m_buffer[current_wp]);
+				data_used += block;
 				current_wp += block;
 			}
+
 			m_wp.store(current_wp, std::memory_order_release);
-			m_used.fetch_add(used, std::memory_order_release);
-			return used;
+			return data_used;
 		}
 
 		unsigned read(uint8_t* buffer, unsigned data_size, bool peek)
 		{
+			unsigned current_wp = m_wp.load(std::memory_order_acquire);
 			unsigned current_rp = m_rp.load(std::memory_order_relaxed);
-			unsigned current_used = m_used.load(std::memory_order_acquire);
+
+			// calculate available data
+			unsigned data_avail = (BUFFER_SIZE + current_wp - current_rp) % BUFFER_SIZE;
 
 			// sanity checks
-			if (data_size > current_used)
+			if (data_size > data_avail)
 				return UINT_MAX;
 			if (data_size == 0)
 				return 0;
 
-			unsigned used = 0;
+			unsigned data_used = 0;
 
 			// first part (up to end)
 			unsigned block = std::min(data_size, BUFFER_SIZE - current_rp);
 			std::copy_n(&m_buffer[current_rp], block, &buffer[0]);
-			used += block;
-			current_rp = (current_rp + used) % BUFFER_SIZE;
+			data_used += block;
+			current_rp = (current_rp + data_used) % BUFFER_SIZE;
 
 			// second part (from beginning, if wrapped)
-			if (used < data_size)
+			if (data_used < data_size)
 			{
-				block = data_size - used;
-				std::copy_n(&m_buffer[current_rp], block, &buffer[used]);
-				used += block;
+				block = data_size - data_used;
+				std::copy_n(&m_buffer[current_rp], block, &buffer[data_used]);
+				data_used += block;
 				current_rp += block;
 			}
 			if (!peek)
 			{
 				m_rp.store(current_rp, std::memory_order_release);
-				m_used.fetch_sub(used, std::memory_order_release);
 			}
-			return used;
+			return data_used;
 		}
 
 		void consume(unsigned data_size)
 		{
-			unsigned old_rp = m_rp.load(std::memory_order_relaxed);
-			unsigned new_rp = (old_rp + data_size) % BUFFER_SIZE;
-			m_rp.store(new_rp, std::memory_order_release);
-			m_used.fetch_sub(data_size, std::memory_order_release);
+			unsigned current_wp = m_wp.load(std::memory_order_acquire);
+			unsigned current_rp = m_rp.load(std::memory_order_relaxed);
+
+			//  available data
+			unsigned data_avail = (BUFFER_SIZE + current_wp - current_rp) % BUFFER_SIZE;
+
+			// sanity check
+			if (data_size > data_avail)
+				data_size = data_avail;
+
+			current_rp = (current_rp + data_size) % BUFFER_SIZE;
+			m_rp.store(current_rp, std::memory_order_release);
 		}
 
 		unsigned used()
 		{
-			return m_used.load(std::memory_order_acquire);
+			unsigned current_wp = m_wp.load(std::memory_order_acquire);
+			unsigned current_rp = m_rp.load(std::memory_order_acquire);
+			return (BUFFER_SIZE + current_wp - current_rp) % BUFFER_SIZE;
 		}
 
 		unsigned free()
 		{
-			return BUFFER_SIZE - m_used.load(std::memory_order_acquire);
+			unsigned current_wp = m_wp.load(std::memory_order_acquire);
+			unsigned current_rp = m_rp.load(std::memory_order_acquire);
+			return (BUFFER_SIZE + current_rp - current_wp - 1 + BUFFER_SIZE) % BUFFER_SIZE;
 		}
 
 		void clear()
 		{
 			m_wp.store(0, std::memory_order_release);
 			m_rp.store(0, std::memory_order_release);
-			m_used.store(0, std::memory_order_release);
 		}
 
 	private:
 		static constexpr unsigned BUFFER_SIZE = 0x80000;
 		std::atomic<unsigned> m_wp;
 		std::atomic<unsigned> m_rp;
-		std::atomic<unsigned> m_used;
 		std::array<uint8_t, BUFFER_SIZE> m_buffer;
 	};
 
 	void start_accept()
 	{
+		if (m_stopping)
+			return;
+
 		std::error_code err;
 		m_acceptor.open(m_localaddr->protocol(), err);
 		m_acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
@@ -326,6 +346,9 @@ private:
 
 	void start_connect()
 	{
+		if (m_stopping)
+			return;
+
 		std::error_code err;
 		if (m_sock_tx.is_open())
 			m_sock_tx.close(err);
@@ -373,6 +396,9 @@ private:
 
 	void start_send_tx()
 	{
+		if (m_stopping)
+			return;
+
 		unsigned used = m_fifo_tx.read(&m_buffer_tx[0], std::min<unsigned>(m_fifo_tx.used(), m_buffer_tx.size()), true);
 		m_sock_tx.async_write_some(
 			asio::buffer(&m_buffer_tx[0], used),
@@ -396,6 +422,9 @@ private:
 
 	void start_receive_rx()
 	{
+		if (m_stopping)
+			return;
+
 		m_sock_rx.async_read_some(
 			asio::buffer(m_buffer_rx),
 			[this](std::error_code const& err, std::size_t length)
@@ -436,6 +465,7 @@ private:
 			util::string_format(std::forward<Format>(fmt), std::forward<Params>(args)...));
 	}
 
+	namco_c139_device &m_device;
 	std::thread m_thread;
 	asio::io_context m_ioctx;
 	asio::executor_work_guard<asio::io_context::executor_type> m_work_guard{m_ioctx.get_executor()};
@@ -445,6 +475,7 @@ private:
 	asio::ip::tcp::socket m_sock_rx;
 	asio::ip::tcp::socket m_sock_tx;
 	asio::steady_timer m_timeout_tx;
+	bool m_stopping;
 	std::atomic_uint m_state_rx;
 	std::atomic_uint m_state_tx;
 	fifo m_fifo_rx;
@@ -523,7 +554,7 @@ void namco_c139_device::device_start()
 	m_timer_12mhz = timer_alloc(FUNC(namco_c139_device::timer_12mhz_callback), this);
 	m_timer_12mhz->adjust(attotime::never);
 
-	auto ctx = std::make_unique<context>();
+	auto ctx = std::make_unique<context>(*this);
 	m_context = std::move(ctx);
 	m_context->start();
 
