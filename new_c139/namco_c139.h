@@ -70,6 +70,7 @@ private:
 	uint8_t m_buffer[0x200];
 
 	uint8_t m_linkid;
+	bool m_forward;
 
 	int m_irq_state;
 	uint16_t m_irq_count;

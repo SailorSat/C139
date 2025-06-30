@@ -39,6 +39,7 @@ public:
 		m_sock_tx(m_ioctx),
 		m_timeout_tx(m_ioctx),
 		m_stopping(false),
+		m_forward(false),
 		m_state_rx(0U),
 		m_state_tx(0U)
 	{
@@ -61,35 +62,35 @@ public:
 			});
 	}
 
-	void reset(std::string localhost, std::string localport, std::string remotehost, std::string remoteport)
+	void reset(std::string localhost, std::string localport, std::string remotehost, std::string remoteport, bool forward)
 	{
-		std::error_code err;
-		asio::ip::tcp::resolver resolver(m_ioctx);
-
-		for (auto&& resolveIte : resolver.resolve(localhost, localport, asio::ip::tcp::resolver::flags::address_configured, err))
-		{
-			m_localaddr = resolveIte.endpoint();
-			LOG("C139: localhost = %s\n", *m_localaddr);
-		}
-		if (err)
-		{
-			LOG("C139: localhost resolve error: %s\n", err.message());
-		}
-
-		for (auto&& resolveIte : resolver.resolve(remotehost, remoteport, asio::ip::tcp::resolver::flags::address_configured, err))
-		{
-			m_remoteaddr = resolveIte.endpoint();
-			LOG("C139: remotehost = %s\n", *m_remoteaddr);
-		}
-		if (err)
-		{
-			LOG("C139: remotehost resolve error: %s\n", err.message());
-		}
-
 		m_ioctx.post(
-			[this]()
+			[this, localhost = std::move(localhost), localport = std::move(localport), remotehost = std::move(remotehost), remoteport = std::move(remoteport), forward = std::move(forward)] ()
 			{
 				std::error_code err;
+				asio::ip::tcp::resolver resolver(m_ioctx);
+
+				for (auto&& resolveIte : resolver.resolve(localhost, localport, asio::ip::tcp::resolver::flags::address_configured, err))
+				{
+					m_localaddr = resolveIte.endpoint();
+					LOG("C139: localhost = %s\n", *m_localaddr);
+				}
+				if (err)
+				{
+					LOG("C139: localhost resolve error: %s\n", err.message());
+				}
+
+				for (auto&& resolveIte : resolver.resolve(remotehost, remoteport, asio::ip::tcp::resolver::flags::address_configured, err))
+				{
+					m_remoteaddr = resolveIte.endpoint();
+					LOG("C139: remotehost = %s\n", *m_remoteaddr);
+				}
+				if (err)
+				{
+					LOG("C139: remotehost resolve error: %s\n", err.message());
+				}
+
+				m_forward = forward;
 				if (m_acceptor.is_open())
 					m_acceptor.close(err);
 				if (m_sock_rx.is_open())
@@ -451,6 +452,9 @@ private:
 						start_accept();
 						return;
 					}
+					if (m_forward)
+						send(&m_buffer_rx[0], length);
+
 					start_receive_rx();
 				}
 			});
@@ -461,7 +465,8 @@ private:
 	{
 		util::stream_format(
 			std::cerr,
-			"%s",
+			"[%s] %s",
+			m_device.tag(),
 			util::string_format(std::forward<Format>(fmt), std::forward<Params>(args)...));
 	}
 
@@ -476,6 +481,7 @@ private:
 	asio::ip::tcp::socket m_sock_tx;
 	asio::steady_timer m_timeout_tx;
 	bool m_stopping;
+	bool m_forward;
 	std::atomic_uint m_state_rx;
 	std::atomic_uint m_state_tx;
 	fifo m_fifo_rx;
@@ -530,6 +536,7 @@ namco_c139_device::namco_c139_device(const machine_config &mconfig, const char *
 	m_localport = opts.comm_localport();
 	m_remotehost = opts.comm_remotehost();
 	m_remoteport = opts.comm_remoteport();
+	m_forward = false;
 
 	// come up with some magic number for identification
 	std::string remotehost = util::string_format("%s:%s", m_remotehost, m_remoteport);
@@ -582,7 +589,7 @@ void namco_c139_device::device_reset()
 	std::fill(std::begin(m_ram), std::end(m_ram), 0);
 	std::fill(std::begin(m_reg), std::end(m_reg), 0);
 
-	m_context->reset(m_localhost, m_localport, m_remotehost, m_remoteport);
+	m_context->reset(m_localhost, m_localport, m_remotehost, m_remoteport, m_forward);
 
 	m_timer_12mhz->adjust(attotime::from_hz(12_MHz_XTAL), 0, attotime::from_hz(12_MHz_XTAL));
 
@@ -733,6 +740,7 @@ void namco_c139_device::sci_de_hack(uint8_t data)
 			m_localport = "15114";
 			m_remotehost = "127.0.0.1";
 			m_remoteport = "15112";
+			m_forward = true;
 			break;
 		default:
 			m_localhost = "127.0.0.1";
